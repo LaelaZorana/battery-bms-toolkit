@@ -1,22 +1,22 @@
 # battery-bms-toolkit
 
-Li-ion cell modeling and battery management system algorithms in plain numpy and scipy. Built as a portfolio piece: every algorithm is small, readable, and covered by a test that checks it against a known answer.
+You'd think battery management math needs a vendor toolbox, but everything a BMS actually computes fits in plain numpy and scipy, and this repo proves it. Every algorithm here is small enough to read in one sitting, and every one is covered by a test that checks it against a known answer. No black boxes.
 
 ## Theory summary
 
-Equivalent circuit model. The cell is an OCV source in series with an ohmic resistance R0 and one or two RC pairs (Thevenin 1RC and 2RC). Terminal voltage is V = OCV(SOC) minus I R0 minus the sum of RC voltages, with current positive on discharge. Each RC voltage follows a first order recursion with time constant R C. The OCV curve is an interpolated table representative of an NMC cell (3.0 to 4.2 V). Resistances pass through an Arrhenius style temperature scaling hook and OCV takes an optional dV/dT term.
+The cell is an equivalent circuit: an OCV source in series with an ohmic resistance R0 and one or two RC pairs, which gives you the Thevenin 1RC and 2RC models. Terminal voltage is V = OCV of SOC minus I R0 minus the sum of RC voltages, with current positive on discharge, and each RC voltage follows a first order recursion with time constant R C. The OCV curve is an interpolated table representative of an NMC cell running 3.0 to 4.2 V. Resistances pass through an Arrhenius style temperature scaling hook, and OCV takes an optional dV/dT term when you care about entropic effects.
 
-SOC estimation. Coulomb counting integrates current and drifts with any sensor bias. The Extended Kalman Filter uses the 1RC model as the process and the terminal voltage as the measurement, linearising OCV(SOC) with a numerical slope. The sigma-point (unscented) variant propagates 2n+1 sigma points through the nonlinear OCV without a Jacobian. Both are initialised with a 20 percent SOC error and pull to truth from noisy voltage.
+SOC estimation is where the interesting failures live. Coulomb counting just integrates current, so any sensor bias makes it drift without bound. The Extended Kalman Filter uses the 1RC model as the process and the terminal voltage as the measurement, linearising OCV against SOC with a numerical slope, while the sigma point unscented variant propagates 2n+1 sigma points through the nonlinear OCV and never needs a Jacobian. Both start with a 20 percent SOC error on purpose and pull to truth from noisy voltage.
 
-SOH tracking. Between two rest points the charge moved equals Q times the SOC change, so a recursive least squares with a forgetting factor tracks the usable capacity Q as it fades.
+SOH tracking rides on a simple identity: between two rest points the charge moved equals Q times the SOC change, so a recursive least squares with a forgetting factor tracks the usable capacity Q as it fades.
 
-Parameter identification. An HPPC style current pulse followed by rest is fitted by nonlinear least squares over R0, R1, C1. A closed form seed uses the instantaneous drop for R0, the slow drop for R1, and a 63 percent relaxation time for the time constant.
+Parameter identification fits an HPPC style current pulse followed by rest with nonlinear least squares over R0, R1 and C1. The seed is closed form. The instantaneous drop gives R0, the slow drop gives R1, and a 63 percent relaxation time gives the time constant.
 
-Balancing. A passive scheme bleeds every cell that is more than one tolerance above the lowest cell through a resistor. The simulator reports time to balance and energy dissipated as heat.
+Balancing is passive: every cell more than one tolerance above the lowest cell bleeds through a resistor, and the simulator reports how long it takes and how much energy turns into heat.
 
-Thermal. A single lumped mass with I squared R heating, an optional entropic term I T dU/dT, convection to ambient, and a runaway threshold flag.
+Thermal is a single lumped mass with I squared R heating, an optional entropic term I T dU/dT, convection to ambient, and a runaway threshold flag.
 
-Safety. Over voltage, under voltage, over current and over temperature checks with hysteresis feed a four state machine (idle, active, warning, fault). Faults latch until the flags release and reset() is called.
+Safety checks cover over voltage, under voltage, over current and over temperature with hysteresis, and they feed a four state machine running idle, active, warning and fault. Faults latch until the flags release and reset() is called. Which is how a real BMS behaves.
 
 ## API
 
