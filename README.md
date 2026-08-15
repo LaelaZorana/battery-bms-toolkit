@@ -1,6 +1,6 @@
 # battery-bms-toolkit
 
-A battery management system sounds like it should need a pile of proprietary firmware, but everything one actually computes fits in plain numpy and scipy. Every algorithm here is small enough to read in one sitting, every one is covered by a test that checks it against a known answer, and the whole thing runs from parameter files for three representative cells rather than from constants buried in the code. Swap the cell file and everything downstream follows.
+Put the same 30 minute drive cycle through two SOC estimators with a 0.15 A current sensor bias sitting in the measurements, and coulomb counting ends 23 percent off while the Extended Kalman Filter, started 20 percent wrong on purpose, ends under 2 percent. One integrates the bias forever and the other keeps checking itself against terminal voltage, and closing that gap is most of what a battery management system is for. So this covers the equivalent circuit model, both SOC filters, parameter identification, balancing, thermal and safety logic, with every number below asserted by a test that checks it against a known answer. It all runs from parameter files for three representative cells rather than from constants buried in the code. Swap the cell file and everything downstream follows.
 
 ## Theory summary
 
