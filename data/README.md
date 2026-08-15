@@ -1,10 +1,10 @@
 # Data
 
-Everything in this folder is synthetic and representative. The parameter values sit in the ranges published for each cell class, but no file here is a measurement of a real named product, so treat them as realistic inputs for the algorithms rather than as a datasheet.
+These read like datasheet values, and they aren't. Everything in this folder is synthetic and representative, with parameter values sitting in the ranges published for each cell class, so the algorithms see numbers that behave the way real ones do. But no file here is a measurement of a real named product, so treat them as realistic inputs rather than as a datasheet.
 
 ## cells/
 
-Three representative parameter sets, one YAML per cell, each carrying capacity, R0, R1 and C1 versus SOC, its own OCV against SOC table, thermal mass and convection, and protection limits with separate charge and discharge current ceilings.
+Three representative parameter sets, one YAML per cell, and each one carries capacity, R0, R1 and C1 versus SOC, its own OCV against SOC table, thermal mass and convection, and protection limits with separate charge and discharge current ceilings.
 
 | File | Cell | Why it is here |
 |---|---|---|
@@ -14,7 +14,7 @@ Three representative parameter sets, one YAML per cell, each carrying capacity, 
 
 ## profiles/
 
-Current profiles as CSV, one `time_s` column plus one current column per cell key, scaled to each cell's capacity. Positive current is discharge.
+Current profiles as CSV, with one `time_s` column plus one current column per cell key, scaled to each cell's capacity. Positive current is discharge, and that convention carries through everything downstream, so it's the first thing to check when a result comes back with the wrong sign.
 
 | File | Content |
 |---|---|
@@ -28,4 +28,4 @@ Current profiles as CSV, one `time_s` column plus one current column per cell ke
 |---|---|
 | `capacity_fade_nmc21700.csv` | Synthetic multi month cycling log for the NMC 21700 cell, columns cycle, measured_ah, temp_c, 600 cycles of square root plus linear fade with measurement noise |
 
-Load everything through `bms.io`: `load_cell`, `load_cells`, `load_profile`, `load_fade_log`.
+Load all of it through `bms.io`: `load_cell`, `load_cells`, `load_profile`, `load_fade_log`.
