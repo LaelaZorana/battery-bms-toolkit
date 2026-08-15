@@ -19,6 +19,8 @@ def simulate_passive_balancing(soc0, capacity_ah=2.5, r_bleed=33.0, tol=0.005,
                                dt=10.0, t_max=6 * 3600.0) -> BalanceResult:
     """Bleed every cell above (min_soc + tol) through r_bleed until the spread is within tol."""
     soc = np.array(soc0, dtype=float)
+    if soc.size == 0:
+        raise ValueError("soc0 must contain at least one cell")
     q = capacity_ah * 3600.0
     hist, ts = [soc.copy()], [0.0]
     energy_j, t, done = 0.0, 0.0, False
@@ -35,4 +37,5 @@ def simulate_passive_balancing(soc0, capacity_ah=2.5, r_bleed=33.0, tol=0.005,
         t += dt
         hist.append(soc.copy())
         ts.append(t)
-    return BalanceResult(np.array(ts), np.array(hist), t, energy_j / 3600.0, done)
+    return BalanceResult(np.array(ts), np.array(hist), t if done else float("nan"),
+                         energy_j / 3600.0, done)

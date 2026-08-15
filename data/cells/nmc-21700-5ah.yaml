@@ -1,0 +1,27 @@
+key: nmc_21700_5ah
+name: NMC 21700 cylindrical, 5 Ah class energy cell
+chemistry: NMC811
+format: 21700 cylindrical
+representative: true
+capacity_ah: 4.85
+rc_vs_soc:
+  soc:    [0.05, 0.20, 0.40, 0.60, 0.80, 0.95]
+  r0_ohm: [0.038, 0.028, 0.025, 0.024, 0.024, 0.026]
+  r1_ohm: [0.022, 0.016, 0.014, 0.013, 0.013, 0.015]
+  c1_f:   [900.0, 1100.0, 1250.0, 1300.0, 1250.0, 1100.0]
+ocv_soc_table:
+  soc:       [0.00, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 1.00]
+  voltage_v: [2.50, 3.20, 3.42, 3.55, 3.62, 3.67, 3.72, 3.80, 3.88, 3.96, 4.06, 4.12, 4.20]
+thermal:
+  mass_kg: 0.068
+  cp_j_per_kgk: 900.0
+  h_w_per_k: 0.20
+  t_ambient_c: 25.0
+  t_shutdown_c: 80.0
+  dudt_v_per_k: -1.0e-4
+limits:
+  v_max: 4.20
+  v_min: 2.50
+  i_dis_max_a: 14.6
+  i_chg_max_a: 4.85
+  t_max_c: 60.0

@@ -1,9 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "battery-bms-toolkit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Li-ion equivalent circuit models and BMS algorithms (EKF/UKF SOC, SOH RLS, HPPC fitting, balancing, thermal, safety)"
+authors = [{ name = "Laela Zorana", email = "zoranalaela9@gmail.com" }]
+license = { text = "MIT" }
+readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["numpy", "scipy", "matplotlib", "pandas"]
+dependencies = ["numpy", "scipy", "matplotlib", "pyyaml"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

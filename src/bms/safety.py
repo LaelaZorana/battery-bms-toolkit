@@ -1,10 +1,15 @@
 """Protection limits with hysteresis and a small BMS state machine.
 
 States: idle, active, warning, fault. A fault latches until reset() is called and
-all limits are back inside their release thresholds.
+all limits are back inside their release thresholds. Sign convention matches
+ecm.py: current is positive on discharge, negative on charge, and the two
+directions carry separate limits because real cells accept far less charge
+current than they deliver. Any NaN input trips the corresponding flag, since a
+safety monitor must fail toward fault, never toward silence.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -21,11 +26,20 @@ class Limits:
     v_max: float = 4.20
     v_min: float = 3.00
     v_hyst: float = 0.05
-    i_max_a: float = 10.0
+    i_dis_max_a: float = 10.0        # discharge limit, positive current
+    i_chg_max_a: float = 4.0         # charge limit, negative current, magnitude
     i_hyst_a: float = 1.0
     t_max_c: float = 60.0
     t_hyst_c: float = 5.0
-    warn_frac: float = 0.95   # fraction of a limit at which warning is raised
+    # Warning thresholds are absolute offsets from each limit. Fractions of an
+    # absolute voltage are meaningless because the zero point is arbitrary.
+    v_warn_margin: float = 0.05
+    i_warn_margin_a: float = 0.5
+    t_warn_margin_c: float = 3.0
+
+
+def _bad(x: float) -> bool:
+    return not math.isfinite(x)
 
 
 @dataclass
@@ -42,15 +56,24 @@ class SafetyMonitor:
 
     def check(self, v_cell_max: float, v_cell_min: float, current_a: float, temp_c: float) -> State:
         L = self.limits
-        self._hyst("ov", v_cell_max > L.v_max, v_cell_max < L.v_max - L.v_hyst)
-        self._hyst("uv", v_cell_min < L.v_min, v_cell_min > L.v_min + L.v_hyst)
-        self._hyst("oc", abs(current_a) > L.i_max_a, abs(current_a) < L.i_max_a - L.i_hyst_a)
-        self._hyst("ot", temp_c > L.t_max_c, temp_c < L.t_max_c - L.t_hyst_c)
+        i_dis = max(current_a, 0.0)
+        i_chg = max(-current_a, 0.0)
+        self._hyst("ov", _bad(v_cell_max) or v_cell_max > L.v_max,
+                   not _bad(v_cell_max) and v_cell_max < L.v_max - L.v_hyst)
+        self._hyst("uv", _bad(v_cell_min) or v_cell_min < L.v_min,
+                   not _bad(v_cell_min) and v_cell_min > L.v_min + L.v_hyst)
+        oc = _bad(current_a) or i_dis > L.i_dis_max_a or i_chg > L.i_chg_max_a
+        oc_rel = (not _bad(current_a) and i_dis < L.i_dis_max_a - L.i_hyst_a
+                  and i_chg < L.i_chg_max_a - L.i_hyst_a)
+        self._hyst("oc", oc, oc_rel)
+        self._hyst("ot", _bad(temp_c) or temp_c > L.t_max_c,
+                   not _bad(temp_c) and temp_c < L.t_max_c - L.t_hyst_c)
         any_fault = any(self.flags.values())
-        near = (v_cell_max > L.v_max * L.warn_frac + (1 - L.warn_frac) * L.v_min * 0
-                or v_cell_min < L.v_min * (2 - L.warn_frac)
-                or abs(current_a) > L.i_max_a * L.warn_frac
-                or temp_c > L.t_max_c * L.warn_frac)
+        near = (v_cell_max > L.v_max - L.v_warn_margin
+                or v_cell_min < L.v_min + L.v_warn_margin
+                or i_dis > L.i_dis_max_a - L.i_warn_margin_a
+                or i_chg > L.i_chg_max_a - L.i_warn_margin_a
+                or temp_c > L.t_max_c - L.t_warn_margin_c)
         if self.state == State.FAULT:
             return self.state
         if any_fault:

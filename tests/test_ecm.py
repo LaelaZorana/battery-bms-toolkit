@@ -1,5 +1,6 @@
 import numpy as np
-from bms.ecm import ECM, ECMParams, ocv
+import pytest
+from bms.ecm import ECM, ECMParams, ocv, docv_dsoc, synthetic_drive_cycle
 
 def test_1rc_step_response_matches_analytic():
     p = ECMParams(capacity_ah=1e6, r0=0.02, r1=0.015, c1=2000.0, n_rc=1)  # huge Q freezes SOC
@@ -13,3 +14,22 @@ def test_1rc_step_response_matches_analytic():
 def test_ocv_monotonic():
     s = np.linspace(0, 1, 101)
     assert np.all(np.diff(ocv(s)) > 0)
+
+def test_docv_dsoc_accepts_arrays():
+    s = np.linspace(0.1, 0.9, 9)
+    slopes = docv_dsoc(s)
+    assert slopes.shape == s.shape
+    assert np.all(slopes > 0)
+    assert isinstance(docv_dsoc(0.5), float)
+
+def test_drive_cycle_terminates_for_coarse_dt():
+    i = synthetic_drive_cycle(300.0, dt=60.0)
+    assert len(i) == 5
+
+def test_rejects_bad_n_rc_and_dt():
+    with pytest.raises(ValueError):
+        ECMParams(n_rc=3)
+    with pytest.raises(ValueError):
+        ECM(ECMParams()).step(1.0, 0.0)
+    with pytest.raises(ValueError):
+        synthetic_drive_cycle(100.0, dt=-1.0)

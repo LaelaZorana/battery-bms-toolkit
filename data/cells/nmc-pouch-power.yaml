@@ -1,0 +1,27 @@
+key: nmc_pouch_power
+name: NMC pouch, 8 Ah high power cell
+chemistry: NMC622
+format: pouch
+representative: true
+capacity_ah: 8.0
+rc_vs_soc:
+  soc:    [0.05, 0.20, 0.40, 0.60, 0.80, 0.95]
+  r0_ohm: [0.0026, 0.0019, 0.0016, 0.0015, 0.0015, 0.0017]
+  r1_ohm: [0.0016, 0.0012, 0.0010, 0.0009, 0.0009, 0.0011]
+  c1_f:   [6000.0, 8000.0, 9500.0, 10000.0, 9500.0, 8000.0]
+ocv_soc_table:
+  soc:       [0.00, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 1.00]
+  voltage_v: [2.70, 3.30, 3.48, 3.58, 3.64, 3.68, 3.73, 3.80, 3.87, 3.95, 4.05, 4.11, 4.20]
+thermal:
+  mass_kg: 0.20
+  cp_j_per_kgk: 950.0
+  h_w_per_k: 1.0
+  t_ambient_c: 25.0
+  t_shutdown_c: 80.0
+  dudt_v_per_k: -1.0e-4
+limits:
+  v_max: 4.20
+  v_min: 2.70
+  i_dis_max_a: 80.0
+  i_chg_max_a: 40.0
+  t_max_c: 60.0
